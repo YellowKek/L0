@@ -10,9 +10,6 @@ import (
 	"github.com/nats-io/nats.go"
 	"log"
 	"net/http"
-	"os"
-	"os/signal"
-	"syscall"
 )
 
 func main() {
@@ -40,9 +37,6 @@ func main() {
 		log.Fatal("ListenAndServe: ", err)
 	}
 
-	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
-	<-c
 }
 
 func subscribe(nc *nats.Conn, conn *pgx.Conn, orderService *service.OrderService) {
