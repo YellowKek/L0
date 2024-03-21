@@ -36,7 +36,6 @@ func main() {
 	if err != nil {
 		log.Fatal("ListenAndServe: ", err)
 	}
-
 }
 
 func subscribe(nc *nats.Conn, conn *pgx.Conn, orderService *service.OrderService) {
@@ -48,13 +47,15 @@ func subscribe(nc *nats.Conn, conn *pgx.Conn, orderService *service.OrderService
 		if err != nil {
 			log.Println(err.Error())
 		}
+		if _, ok := orderService.GetById(acceptedOrder.OrderUid); !ok { // если заказа с таким id еще нет в бд
+			_, err = conn.Exec(context.Background(),
+				"insert into orders (id, data) values ($1, $2)", acceptedOrder.OrderUid, acceptedOrder)
 
-		_, err = conn.Exec(context.Background(),
-			"insert into orders (id, data) values ($1, $2)", acceptedOrder.OrderUid, acceptedOrder)
-
-		if err != nil {
-			log.Println(err.Error())
+			if err != nil {
+				log.Println(err.Error())
+			}
+			orderService.AddOrder(acceptedOrder.OrderUid, acceptedOrder) // добавление в словарь принятого заказа
 		}
-		orderService.AddOrder(acceptedOrder.OrderUid, acceptedOrder) // добавление в словарь принятого заказа
+
 	})
 }
